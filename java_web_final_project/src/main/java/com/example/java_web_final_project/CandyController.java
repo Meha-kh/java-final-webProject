@@ -1,44 +1,39 @@
 package com.example.java_web_final_project;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin
 @RequestMapping("/candy")
 public class CandyController {
 
-    private final CandyRepository candyRepository;
+   final public CandyService candyService;
 
-    @Autowired
-    public CandyController(CandyRepository candyRepository) {
-        this.candyRepository = candyRepository;
-    }
-
-    @GetMapping("/{id}")
-    public Candy getCandyById(@PathVariable Long id) {
-        return candyRepository.findById(id).orElse(null);
+    public CandyController(CandyService candyService) {
+        this.candyService = candyService;
     }
 
     @PostMapping
-    public Candy createCandy(@RequestBody Candy candy) {
-        return candyRepository.save(candy);
+    public Candy createnewCandy(@RequestBody Candy candy) {
+        return candyService.createCandy(candy);
     }
 
+    @GetMapping("/{id}")
+    public Optional<Candy> CandyById(@PathVariable Long id) {
+        return Optional.ofNullable(candyService.getCandyById(id));
+    }
+
+
     @PutMapping("/{id}")
-    public Candy updateCandy(@PathVariable Long id, @RequestBody Candy updatedCandy) {
-        return candyRepository.findById(id)
-                .map(candy -> {
-                    candy.setName(updatedCandy.getName());
-                    candy.setFlavor(updatedCandy.getFlavor());
-                    candy.setPrice(updatedCandy.getPrice());
-                    return candyRepository.save(candy);
-                })
-                .orElse(null);
+    public void updateCandy( @RequestBody Candy updatedCandy) {
+
+                candyService.updateCandy(updatedCandy);
+
     }
 
     @DeleteMapping("/{id}")
     public void deleteCandy(@PathVariable Long id) {
-        candyRepository.deleteById(id);
+        candyService.deleteCandy(id);
     }
 }

@@ -1,69 +1,75 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const candyForm = document.getElementById("candyForm");
-  const candyContainer = document.getElementById("candyContainer");
-
-  
-  const fetchCandies = async () => {
-    try {
-      const response = await fetch("/candy");
-      const candies = await response.json();
-      renderCandies(candies);
-    } catch (error) {
-      console.error("Error fetching candies:", error);
+async function fetchCandies() {
+  try {
+    const response = await fetch("http:/localhost:8080/api/candies"); 
+    if (!response.ok) {
+      throw new Error("Failed to fetch candies");
     }
-  };
+    const candies = await response.json();
 
-  
-  const renderCandies = (candies) => {
+    const candyContainer = document.getElementById("candyContainer");
     candyContainer.innerHTML = "";
 
-    candies.forEach((candy) => {
+    for (const candy of candies) {
       const candyElement = document.createElement("div");
       candyElement.innerHTML = `
         <h3>${candy.name}</h3>
         <p>Flavor: ${candy.flavor}</p>
         <p>Price: ${candy.price}</p>
       `;
+
       candyContainer.appendChild(candyElement);
-    });
+    }
+  } catch (error) {
+    console.error("Error fetching candies:", error);
+  }
+}
+
+async function addCandy(event) {
+  event.preventDefault();
+
+  const nameInput = document.getElementById("nameInput");
+  const flavorInput = document.getElementById("flavorInput");
+  const priceInput = document.getElementById("priceInput");
+
+  const name = nameInput.value.trim(); 
+  const flavor = flavorInput.value.trim();
+  const price = parseFloat(priceInput.value);
+
+  if (!name || !flavor || isNaN(price)) {
+    console.error("Invalid candy data");
+    return;
+  }
+
+  const candy = {
+    name,
+    flavor,
+    price,
   };
 
-  
-  candyForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  try {
+    const response = await fetch("/api/candies", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(candy),
+    });
 
-    const nameInput = document.getElementById("nameInput");
-    const flavorInput = document.getElementById("flavorInput");
-    const priceInput = document.getElementById("priceInput");
-
-    const candy = {
-      name: nameInput.value,
-      flavor: flavorInput.value,
-      price: parseFloat(priceInput.value),
-    };
-
-    try {
-      const response = await fetch("/candy", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(candy),
-      });
-
-      if (response.ok) {
-        fetchCandies();
-        nameInput.value = "";
-        flavorInput.value = "";
-        priceInput.value = "";
-      } else {
-        console.error("Failed to create candy:", response.statusText);
-      }
-    } catch (error) {
-      console.error("Error creating candy:", error);
+    if (!response.ok) {
+      throw new Error("Failed to add candy");
     }
-  });
 
-  
-  fetchCandies();
-});
+    nameInput.value = "";
+    flavorInput.value = "";
+    priceInput.value = "";
+
+    await fetchCandies();
+  } catch (error) {
+    console.error("Error adding candy:", error);
+  }
+}
+
+const candyForm = document.getElementById("candyForm");
+candyForm.addEventListener("submit", addCandy);
+
+fetchCandies();
